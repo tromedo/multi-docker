@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tromedo/react-test  -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true tromedo/react-test npm test 
+
+after_success:
+  - docker build -t tromedo/multi-client ./client
+  - docker build -t tromedo/multi-nginx ./nginx
+  - docker build -t tromedo/multi-server ./server
+  - docker build -t tromedo/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push tromedo/multi-client
+  - docker push tromedo/multi-nginx
+  - docker push tromedo/multi-server
+  - docker push tromedo/multi-worker
